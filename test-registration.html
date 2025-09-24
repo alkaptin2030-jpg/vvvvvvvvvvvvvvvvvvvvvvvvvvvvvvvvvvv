@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار Firebase والإشعارات</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        #results { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>اختبار Firebase والإشعارات</h1>
+    
+    <div class="test-section">
+        <h3>1. اختبار الاتصال بـ Firebase</h3>
+        <button onclick="testFirebaseConnection()">اختبار الاتصال</button>
+        <div id="firebase-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. اختبار إضافة إشعار</h3>
+        <button onclick="testAddNotification()">إضافة إشعار تجريبي</button>
+        <div id="notification-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. اختبار قراءة الإشعارات</h3>
+        <button onclick="testReadNotifications()">قراءة الإشعارات</button>
+        <div id="read-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>4. اختبار إضافة مستخدم</h3>
+        <button onclick="testAddUser()">إضافة مستخدم تجريبي</button>
+        <div id="user-result"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, getDocs, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyBRYf_nDTQC-wzWZWjFyWjUKKWc5UHOe-I",
+            authDomain: "voda-45a7f.firebaseapp.com",
+            projectId: "voda-45a7f",
+            storageBucket: "voda-45a7f.appspot.com",
+            messagingSenderId: "1234567890",
+            appId: "1:1234567890:web:abcdef123456"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        window.testFirebaseConnection = async function() {
+            const resultDiv = document.getElementById('firebase-result');
+            try {
+                resultDiv.innerHTML = 'جاري الاختبار...';
+                const testCollection = collection(db, 'test');
+                resultDiv.innerHTML = '<div class="success">✅ تم الاتصال بـ Firebase بنجاح!</div>';
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ فشل الاتصال: ${error.message}</div>`;
+            }
+        };
+        
+        window.testAddNotification = async function() {
+            const resultDiv = document.getElementById('notification-result');
+            try {
+                resultDiv.innerHTML = 'جاري إضافة الإشعار...';
+                const docRef = await addDoc(collection(db, 'admin_notifications'), {
+                    type: 'test_notification',
+                    title: 'إشعار تجريبي',
+                    message: 'هذا إشعار تجريبي للتأكد من عمل النظام',
+                    userEmail: 'test@example.com',
+                    userName: 'مستخدم تجريبي',
+                    userPhone: '01234567890',
+                    isRead: false,
+                    priority: 'high',
+                    createdAt: serverTimestamp(),
+                    timestamp: new Date().toISOString()
+                });
+                resultDiv.innerHTML = `<div class="success">✅ تم إضافة الإشعار بنجاح! ID: ${docRef.id}</div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ فشل في إضافة الإشعار: ${error.message}</div>`;
+            }
+        };
+        
+        window.testReadNotifications = async function() {
+            const resultDiv = document.getElementById('read-result');
+            try {
+                resultDiv.innerHTML = 'جاري قراءة الإشعارات...';
+                const querySnapshot = await getDocs(collection(db, 'admin_notifications'));
+                const notifications = [];
+                querySnapshot.forEach((doc) => {
+                    notifications.push({ id: doc.id, ...doc.data() });
+                });
+                resultDiv.innerHTML = `<div class="success">✅ تم العثور على ${notifications.length} إشعار</div>`;
+                if (notifications.length > 0) {
+                    resultDiv.innerHTML += '<ul>';
+                    notifications.slice(0, 5).forEach(notif => {
+                        resultDiv.innerHTML += `<li>${notif.title} - ${notif.message}</li>`;
+                    });
+                    resultDiv.innerHTML += '</ul>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ فشل في قراءة الإشعارات: ${error.message}</div>`;
+            }
+        };
+        
+        window.testAddUser = async function() {
+            const resultDiv = document.getElementById('user-result');
+            try {
+                resultDiv.innerHTML = 'جاري إضافة المستخدم...';
+                const docRef = await addDoc(collection(db, 'profiles'), {
+                    fullName: 'مستخدم تجريبي',
+                    email: 'testuser@example.com',
+                    phone: '01234567890',
+                    role: 'user',
+                    isActive: true,
+                    createdAt: serverTimestamp(),
+                    shopId: 'demo-shop-001'
+                });
+                resultDiv.innerHTML = `<div class="success">✅ تم إضافة المستخدم بنجاح! ID: ${docRef.id}</div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ فشل في إضافة المستخدم: ${error.message}</div>`;
+            }
+        };
+    </script>
+</body>
+</html>
